@@ -1,32 +1,67 @@
-
-dubois_pal <- function(n = 8, type = "divergent") {
-  if (!(length(type) == 1 && type %in% c("divergent", "sequential"))) {
-    stop("`type` should be just one of divergent and sequential")
+# much of the syntax and signature is taken from viridis, viridisLite,
+# and RColorBrewer
+dubois_sequential <- function(n, begin = 0, end = 1, direction = 1) {
+  if (begin < 0 | begin > 1 | end < 0 | end > 1) {
+    stop("begin and end must be in [0,1]")
   }
-  divergent_pal <- c(
-    "black" = "#000000",
-    "red" = "#dc143c",
-    "green" = "#00aa00",
-    "brown" = "#654321",
-    "tan" = "#d2b48c",
-    "gold" = "#ffd700",
-    "pink" = "#ffc0cb",
-    "blue" = "#4682b4"
-  )
+  if (abs(direction) != 1) {
+    stop("direction must be 1 or -1")
+  }
+  if (n == 0) {
+    return(character(0))
+  }
+  if (direction == -1) {
+    tmp <- begin
+    begin <- end
+    end <- tmp
+  }
   sequential_pal <- c(
     "#131514", "#31241B", "#59371C", "#8F623B",
     "#FDC111", "#F9E3AA", "#F9EFE3"
   )
   sequential_generator <- scales:::gradient_n_pal(sequential_pal)
-
-  if (type == "divergent") {
-    return(divergent_pal[1:n])
-  }
-  return(sequential_generator(seq(0, 1, length.out = n)))
+  sequential_generator(seq(begin, end, length.out = n))
 }
 
+dubois_divergent <- c(
+  "black" = "#000000",
+  "red" = "#dc143c",
+  "green" = "#00aa00",
+  "brown" = "#654321",
+  "tan" = "#d2b48c",
+  "gold" = "#ffd700",
+  "pink" = "#ffc0cb",
+  "blue" = "#4682b4"
+)
 
-# by default, returns a divergent color scale with the specified amount of colors
-dubois_pal(4)
-# but can return a sequential color scale
-dubois_pal(10, type = "sequential")
+
+dubois_pal <- function(n = length(dubois_divergent), type = "divergent", ...) {
+  if (!(length(type) == 1 && type %in% c("divergent", "sequential"))) {
+    stop("`type` should be just one of divergent and sequential")
+  }
+  if (type == "divergent" && length(list(...)) >= 1) {
+    warning(
+      "Extra parameters supplied in '...' have no effect ",
+      "if type == 'divergent'."
+    )
+  }
+  if (n > length(dubois_divergent) && type == "divergent") {
+    warning(
+      "The ggdubois divergent palette can only supply up to 8 colors; ",
+      "you asked for ", n, ". NA values will be included in the palette."
+    )
+  }
+
+  if (type == "divergent") {
+    return(dubois_divergent[1:n])
+  }
+  return(dubois_sequential(n, ...))
+}
+
+# # by default, returns a divergent color scale
+# dubois_pal(4)
+# # but can return a sequential color scale, e.g. with colors on a continuum
+# dubois_pal(10, type = "sequential")
+
+# throws warning if more than 8 colors are asked for in a divergent pal
+# dubois_pal(10)
