@@ -1,7 +1,7 @@
 library(ggplot2)
 library(ggthemes)
 library(showtext)
-
+source("R/palettes.R")
 theme_dubois <- function(base_size = 12, base_family = "Montserrat",
                          show_grid = F, show_border = F) {
   colors <- c(dubois_pal(), "background" = "#EDDCCC", "text" = "#2A1206")

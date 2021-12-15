@@ -1,58 +1,133 @@
-
+library(ggplot2)
 # plan:
 # receive a parameter (xmax or maxwidth or something)
+# and two aesthetics (x and y)
+
+# add
 # modify the rectangle to wrap around (y %/% maxwidth) times
 # the remainder is y %% maxwidth
 # the overhang will be rendered as a circle grob that connects the rectangles
 # use rectGrob to render rectangles as appropriate
 #
-GeomWrappedBar <- ggproto("GeomWrappedBar", Geom, )
+GeomWrappedBar <- ggproto("GeomWrappedBar", GeomBar,
+  setup_data = function(data, params) {
+    data$flipped_aes <- params$flipped_aes
+    data <- flip_data(data, params$flipped_aes)
+
+    # add on extra rows to the data:
+    # should be
+    data$width <- data$width %||%
+      params$width %||% (resolution(data$x, FALSE) * 0.9)
+    data <- transform(data,
+      ymin = pmin(y, 0), ymax = pmax(y, 0),
+      xmin = x - width / 2, xmax = x + width / 2,
+      width = NULL
+    )
+    print(data)
+    flip_data(data, params$flipped_aes)
+  },
+  draw_panel = function(self, data, panel_params, coord, max_height) {
+    geom_rect_grob <- function(data, panel_params, coord) {
+      ggproto_parent(GeomRect, self)$draw_panel(
+        data,
+        panel_params,
+        coord,
+        lineend = "butt",
+        linejoin = "mitre"
+      )
+    }
+    print(data)
+    coords <- coord$transform(data, panel_params)
+    # produce # times to wrap and the leftover segment
+    times_to_wrap <- max(data$y) %/% max_height
+    leftover <- max(data$y) %% max_height
+    going_right <- TRUE
+    grobs <- list()
+
+    for (i in 1:times_to_wrap) {
+      grobs[[i]] <- rectGrob(
+        coords$xmin, ifelse(going_right, coords),
+      )
+      #  rectGrob(
+      #         coords$xmin, coords$ymax,
+      #         width = coords$xmax - coords$xmin,
+      #         height = coords$ymax - coords$ymin,
+      #         default.units = "native",
+      #         just = c("left", "top"),
+      #         gp = gpar(
+      #           col = coords$colour,
+      #           fill = alpha(coords$fill, coords$alpha),
+      #           lwd = coords$size * .pt,
+      #           lty = coords$linetype,
+      #           linejoin = linejoin,
+      #           lineend = lineend
+      #         )
+      #       ))
+      going_right <- !going_right
+    }
+
+    # produce circle
+
+    # potentially break
+
+    # produce bar going left
+
+    # produce circle
+
+    # potentially break
+    zeroGrob()
+  }
+
+  # produce last bar
+
+  # return glist
+)
+
+geom_wrappedbar <- function(mapping = NULL, data = NULL,
+                            ...,
+                            max_height = 0,
+                            width = NULL,
+                            na.rm = FALSE,
+                            orientation = NA,
+                            show.legend = NA,
+                            inherit.aes = TRUE) {
+  layer(
+    data = data,
+    mapping = mapping,
+    stat = "identity",
+    geom = GeomWrappedBar,
+    position = "dodge",
+    show.legend = show.legend,
+    inherit.aes = inherit.aes,
+    params = list(
+      na.rm = na.rm,
+      max_height = max_height,
+      ...
+    )
+  )
+}
+
 # testing
 tester <- function() {
   ct <- tigris::states() %>%
     filter(NAME == "Connecticut")
   map(1:4, function(i) {
     mutate(ct,
-      pop = runif(1, 0, 2) * ALAND,
+      pop = i^3,
       group = i
     )
   }) %>%
     do.call(rbind, .) %>%
     mutate(group = as.factor(group)) %>%
     ggplot() +
-    geom_scaledmap(aes(x = pop))
-}
-
-
-
-
-
-# ---
-
-geom_bar <- function(mapping = NULL, data = NULL,
-                     stat = "count", position = "stack",
-                     ...,
-                     width = NULL,
-                     na.rm = FALSE,
-                     orientation = NA,
-                     show.legend = NA,
-                     inherit.aes = TRUE) {
-  layer(
-    data = data,
-    mapping = mapping,
-    stat = stat,
-    geom = GeomBar,
-    position = position,
-    show.legend = show.legend,
-    inherit.aes = inherit.aes,
-    params = list(
-      width = width,
-      na.rm = na.rm,
-      orientation = orientation,
-      ...
+    geom_wrappedbar(
+      aes(x = group, y = pop),
+      max_height = 30
     )
-  )
 }
+
+# --- reference and notes are below
+
 geom_rect <- function(mapping = NULL, data = NULL,
                       stat = "identity", position = "identity",
                       ...,

@@ -51,3 +51,5 @@ geom_spike <- function(mapping = NULL, data = NULL,
     params = list(na.rm = na.rm, ...)
   )
 }
+
+1 + 1
