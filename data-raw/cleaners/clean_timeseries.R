@@ -29,7 +29,14 @@ local({
         median_income = Households,
         income_group = ntile(median_income, 3),
         income_group = c("low", "medium", "high")[income_group],
-        black = (Total - `White (single race)`) / Total,
+        total = Total,
+        white = `White (single race)` / Total,
+        black = `Black or African American (single race)` / Total,
+        asian = `Asian and Pacific Islander and Other Race (single race)` /
+          Total,
+        native = `American Indian and Alaska Native (single race)` / Total,
+        other = (1 - (white + black + asian + native)),
+        nonwhite = (Total - `White (single race)`) / Total,
         edu = (Total - `25 years and over ~ 4 or more years of college (until 1980) or bachelor's degree or higher (since 1990)`) / Total, # nolint
         owner = `Owner occupied` / (`Owner occupied` + `Renter occupied`),
         workforce = `16 years and over ~ Male ~ In labor force` +
@@ -40,7 +47,8 @@ local({
       ) %>%
       select(
         fips, year, median_income, income_group,
-        black, edu, owner, unemp
+        total, white, black, asian, native, other, nonwhite,
+        edu, owner, unemp
       )
   }
 

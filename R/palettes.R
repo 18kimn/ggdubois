@@ -31,7 +31,8 @@ dubois_divergent <- c(
   "tan" = "#d2b48c",
   "gold" = "#ffd700",
   "pink" = "#ffc0cb",
-  "blue" = "#4682b4"
+  "blue" = "#4682b4",
+  "background" = "#e4d2c1"
 )
 
 
@@ -57,11 +58,3 @@ dubois_pal <- function(n = length(dubois_divergent), type = "divergent", ...) {
   }
   return(dubois_sequential(n, ...))
 }
-
-# # by default, returns a divergent color scale
-# dubois_pal(4)
-# # but can return a sequential color scale, e.g. with colors on a continuum
-# dubois_pal(10, type = "sequential")
-
-# throws warning if more than 8 colors are asked for in a divergent pal
-# dubois_pal(10)

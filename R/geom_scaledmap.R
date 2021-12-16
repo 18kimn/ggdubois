@@ -1,33 +1,45 @@
-library(tidyverse)
-library(sf)
-library(tidycensus)
-library(tigris)
-
 StatScaledMap <- ggproto("StatScaledMap", StatSf,
   compute_layer = function(self, data, params, layout) {
-    print(params)
-    # add coord to the params, so it can be forwarded to compute_group()
-    params$coord <- layout$coord
-    ggproto_parent(Stat, self)$compute_layer(data, params, layout)
-  },
-  compute_group = function(self, data, scales, coord) {
-    # if (!(class(data$x) %in% c("numeric", "factor"))) {
-    #   stop("Only numeric or factor variables allowed for x")
-    # }
-    # print(data)
-    data_list <- lapply(seq(1, 0, by = -0.25), function(scale_factor) {
-      newdata <- data
-      newdata$geometry <- (
-        newdata$geometry - st_centroid(newdata$geometry)
-      ) * scale_factor
-      newdata$factor <- scale_factor
-      return(newdata)
-    })
+    rescaler <- function(x, newMin = 0.4) {
+      (1 - newMin) / (max(x) - min(x)) * (x - min(x)) + newMin
+    }
+    data$x <- rescaler(data$x)
+    if (length(data$PANEL) != 1) {
+      data$x <- sort(data$x, decreasing = TRUE)
+    }
+
+    data_list <- lapply(
+      seq_len(length(data$x)),
+      function(i) {
+        sub_dta <- data[i, ]
+        scale_factor <- data$x[i]
+        centroid <- sf::st_centroid(sub_dta$geometry)
+
+        sub_dta$geometry <- (sub_dta$geometry - centroid) *
+          scale_factor + centroid
+        return(sub_dta)
+      }
+    )
     data <- do.call(rbind, data_list)
-    print(data)
-    ggproto_parent(StatSf, self)$compute_group(data, scales, coord)
+
+    # Hacky: In order to make facet_wrap() work with this
+    # I need to delete "x" as an aesthetic so that the plot doesnt
+    # try to scale to x
+    # This means we can't use Stat or StatSf's `compute_layer`
+    # since it checks for the presence of aesthetics
+    data$x <- NULL
+
+    params$coord <- layout$coord
+    # Trim off extra parameters
+    params <- params[intersect(names(params), self$parameters())]
+
+    args <- c(list(data = quote(data), scales = quote(scales)), params)
+    ggplot2:::dapply(data, "PANEL", function(data) {
+      scales <- layout$get_scales(data$PANEL[1])
+      tryCatch(do.call(self$compute_panel, args))
+    })
   },
-  required_aes = c("geometry", "x")
+  required_aes = c("geometry", "x", "group")
 )
 
 geom_scaledmap <- function(mapping = NULL, data = NULL,
@@ -42,20 +54,4 @@ geom_scaledmap <- function(mapping = NULL, data = NULL,
       params = list(na.rm = na.rm, ...)
     ), coord_sf(default = TRUE)
   )
-}
-
-# testing
-tester <- function() {
-  ct <- tigris::states() %>%
-    filter(NAME == "Connecticut")
-  map(1:4, function(i) {
-    mutate(ct,
-      pop = runif(1, 0, 2) * ALAND,
-      group = i
-    )
-  }) %>%
-    do.call(rbind, .) %>%
-    mutate(group = as.factor(group)) %>%
-    ggplot() +
-    geom_scaledmap(aes(x = pop))
 }

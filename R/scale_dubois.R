@@ -8,7 +8,9 @@ scale_dubois <- function(aesthetics, type = "divergent", ...) {
       gradient_n_pal(dubois_sequential(6, ...))
     ))
   }
-  return(discrete_scale(aesthetics, "dubois_d", dubois_pal(), ...))
+  return(discrete_scale(aesthetics, "dubois_d", \(n){
+    unname(dubois_pal(n))
+  }, ...))
 }
 
 scale_color_dubois <- function(...) {
@@ -18,14 +20,3 @@ scale_color_dubois <- function(...) {
 scale_fill_dubois <- function(...) {
   scale_dubois(aesthetics = "fill", ...)
 }
-
-
-ggplot(georgia, aes(x = median_income, y = high_school_graduates)) +
-  geom_point() +
-  scale_color_gradientn(colors = dubois_pal(10))
-
-
-# or the slightly more conveient and extensible syntax of:
-ggplot(georgia, aes(x = median_income, y = high_school_graduates)) +
-  geom_point() +
-  scale_color_dubois()

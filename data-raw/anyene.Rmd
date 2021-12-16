@@ -138,8 +138,7 @@ ggplot(data = furniture_spiral) +
     ),
     plot.caption = element_text(size = 4, family = "Open Sans"),
     legend.position = "none"
-  ) +
-  NULL
+  ) 
 ```
 
 ```{r}

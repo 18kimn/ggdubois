@@ -16,14 +16,14 @@ local({
       full.names = TRUE, pattern = "\\.csv"
     ) %>%
       map_dfr(process_file) %>%
-      mutate(fips = paste0(`County Code`, `State Code`)) %>%
+      mutate(fips = paste0(`State Code`, `County Code`)) %>%
       rename(
         year = `Data File Year`,
         march_employees = `Total mid-March employees`,
         payroll = `Total annual payroll`,
         establishments = `Total number of establishments`,
       ) %>%
-      group_by(fips, year) %>%
+      group_by(`GIS Join Match Code`, fips, year) %>%
       # These columns have some character values in them,
       #   which should be coerced to numeric for data analysis
       mutate(across(c(march_employees:establishments), as.numeric)) %>%

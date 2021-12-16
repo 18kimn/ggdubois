@@ -116,3 +116,4 @@ geom_wrappedbar <- function(mapping = NULL, data = NULL,
     )
   )
 }
+

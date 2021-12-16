@@ -1,6 +1,6 @@
 #' @import ggplot2
 
-StatSpiral <- ggproto("StatSpiral", Stat,
+StatPathSpiral <- ggproto("StatPathSpiral", Stat,
   required_aes = c("x", "y"),
   compute_group = function(data, scales) {
     # Slope is needed to make the spiral curve inward instead of
@@ -41,7 +41,7 @@ StatSpiral <- ggproto("StatSpiral", Stat,
   }
 )
 
-geom_spiral <- function(mapping = NULL, data = NULL,
+geom_pathspiral <- function(mapping = NULL, data = NULL,
                         na.rm = FALSE, show.legend = NA,
                         stat = "identity",
                         position = "identity",
@@ -50,33 +50,5 @@ geom_spiral <- function(mapping = NULL, data = NULL,
     geom = GeomSegment, mapping = mapping, data = data, stat = StatSpiral,
     position = position, show.legend = show.legend, inherit.aes = inherit.aes,
     params = list(na.rm = na.rm, ...)
-  )
-}
-geom_segment <- function(mapping = NULL, data = NULL,
-                         stat = "identity", position = "identity",
-                         ...,
-                         arrow = NULL,
-                         arrow.fill = NULL,
-                         lineend = "butt",
-                         linejoin = "round",
-                         na.rm = FALSE,
-                         show.legend = NA,
-                         inherit.aes = TRUE) {
-  layer(
-    data = data,
-    mapping = mapping,
-    stat = stat,
-    geom = GeomSegment,
-    position = position,
-    show.legend = show.legend,
-    inherit.aes = inherit.aes,
-    params = list(
-      arrow = arrow,
-      arrow.fill = arrow.fill,
-      lineend = lineend,
-      linejoin = linejoin,
-      na.rm = na.rm,
-      ...
-    )
   )
 }
