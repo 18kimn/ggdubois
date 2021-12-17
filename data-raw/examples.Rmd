@@ -18,13 +18,13 @@ dta <- georgia %>%
   group_by(year) %>%
   st_drop_geometry() %>%
   summarize(
-    across(c(march_employees, owner, payroll, median_income), mean),
+    across(c(march_employees, owner, median_income), mean),
     across(c(
       black, white, asian, other
     ), ~ sum((total * .), na.rm = TRUE) / sum(total)),
     total_payroll = sum(payroll, na.rm = TRUE),
   ) %>%
-  mutate(heights = cumsum(owner), owner = owner - 0.4) # scaling issue
+  mutate(owner = owner - 0.4, heights = cumsum(owner), ) # scaling issue
 
 font_add_google("Montserrat")
 showtext_auto()
@@ -44,11 +44,11 @@ scaledmap <- ggplot(fulton_county, aes(x = edu)) +
     title = "College graduation rate in Fulton County, Georgia",
     subtitle = "Size is proportional to graduation rate. "
   ) +
-  theme_dubois()
+  theme_dubois(base_size = 10)
 
 ggsave("data-raw/example-plots/scaledmap.png",
   scaledmap,
-  width = 8, height = 8
+  width = 7, height = 8
 )
 ```
 
@@ -85,7 +85,7 @@ spikeplot <- ggplot() +
   coord_polar() +
   scale_fill_manual(values = c("black", "#4682b4", "#ffd700", "#dc143c")) +
   labs(
-    title = "Proportion of those owning their home in Georgia steadily increases." # nolint
+    title = "Homeownership in Georgia steadily increases", # nolint
   ) +
   theme_dubois()
 ggsave("data-raw/example-plots/spikeplots.png",
@@ -170,7 +170,7 @@ payroll <- tibble(
     max(income$ymax - 2.5 * width)
   ) + width,
   variable = "payroll"
-) %>% mutate(xmax = pmin(xmax, income$xmax + 2))
+) %>% mutate(xmax = pmin(xmax, max(income$xmax + 2)))
 
 intersects <- tribble(
   ~xmin, ~xmax, ~ymin, ~ymax, ~variable,
